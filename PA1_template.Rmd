@@ -1,25 +1,71 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
-
-
-## Loading and preprocessing the data
 
 
 
-## What is mean total number of steps taken per day?
 
 
+```{r}
+setwd("C:/Users/FM/Documents/Personal/Data_Science_Coursera/Course-5/")
+data_orig<-read.csv("activity.csv")
+data=na.omit(data_orig)
+aggregatedData<-aggregate(steps~date, data, sum)
+hist(x =aggregatedData$steps)
 
-## What is the average daily activity pattern?
+```
+
+```{r}
+totalStepsByDay<-aggregate(steps~date, data, sum)
+meanStepsPerDay<-mean(totalStepsByDay$steps)
+meanStepsPerDay
+```
+```{r}
+totalStepsByDay<-aggregate(steps~date, data, sum)
+meadianStepsPerDay<-median(totalStepsByDay$steps)
+meadianStepsPerDay
+```
 
 
+```{r}
+averageSteps<-aggregate(steps~interval, data, mean)
+plot(averageSteps, type="l")
+```
 
-## Imputing missing values
 
+```{r}
+  averageSteps[which.max(averageSteps[,2]),1]
+```
+```{r}
+missingIndex<-is.na(data_orig[,1])
+m<-mean(averageSteps$steps)
+filled_data<-data_orig
+filled_data[missingIndex,1]<-m
+head(filled_data)
+```
+```{r}
+aggregatedImputedData<-aggregate(steps~date, filled_data, sum)
+hist(x =aggregatedImputedData$steps)
+```
+```{r}
+mean_new<-mean(aggregatedImputedData$steps)
+mean_new
+```
+```{r}
+median_new<-median(aggregatedImputedData$steps)
+median_new
+```
 
+```{r}
+library(dplyr)
+newdata<-filled_data
+newdata$date<-as.Date(newdata$date)
+newdata1<-newdata%>%mutate(dayType= ifelse(weekdays(newdata$date)=="Saturday" | weekdays(newdata$date)=="Sunday", "Weekend", "Weekday"))
+averageStepsByDayAndByInterval<-newdata1%>%group_by(dayType, interval)%>%summarize(averageStepsByDay=sum(steps))
 
-## Are there differences in activity patterns between weekdays and weekends?
+head(averageStepsByDayAndByInterval)
+```
+```{r}
+library(lattice)
+with(averageStepsByDayAndByInterval, xyplot(averageStepsByDay~interval|dayType,type="l",
+                                            main="Total number of Steps within intervals by dayType",xlab = "Daily Intervals", ylab = "Avg number of steps"))
+
+```
+
